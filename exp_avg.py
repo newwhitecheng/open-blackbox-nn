@@ -240,7 +240,7 @@ def avg_MI(ids):
 def plot_IP(measures, layers):
     COLORBAR_MAX_EPOCHS = 3000
     infoplane_measure = 'bin'
-    PLOT_LAYERS = list(range(layers))
+    PLOT_LAYERS = list(range(len(layers)))
 
     # Plot Information Plane
     max_epoch = max((max(vals.keys()) if len(vals) else 0) for vals in measures.values())
