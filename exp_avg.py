@@ -25,18 +25,18 @@ sns.set_style('darkgrid')
 
 import utils
 
-def save_activation(activation, L1):
+def save_activation(activation,layers):
 
     #Parameters Of Experiments
     cfg = {}
     cfg['SGD_BATCHSIZE']    = 256
     cfg['SGD_LEARNINGRATE'] = 0.0004
-    cfg['NUM_EPOCHS']       = 5000
+    cfg['NUM_EPOCHS']       = 3100
     cfg['FULL_MI']          = True
 
-    cfg['ACTIVATION']       = 'tanh'
+    cfg['ACTIVATION']       = activation
 
-    cfg['LAYER_DIMS']       = [10, 7, 5, 4, 3]
+    cfg['LAYER_DIMS']       = layers
     ARCH_NAME = '-'.join(map(str, cfg['LAYER_DIMS']))
 
     trn, tst = utils.get_IB_data('2017_12_21_16_51_3_275766')
@@ -84,7 +84,7 @@ def save_activation(activation, L1):
                 epochs=cfg['NUM_EPOCHS'],
                 callbacks=[reporter,])
 
-def computeMI(id):
+def computeMI(id, layers):
     train, test = utils.get_IB_data('2017_12_21_16_51_3_275766')
 
     # For both train and test musr correspond with saving code
@@ -97,13 +97,13 @@ def computeMI(id):
     DO_LOWER = (infoplane_measure == 'lower')
     DO_BINNED = (infoplane_measure == 'bin')
 
-    MAX_EPOCHS = 5000
+    MAX_EPOCHS = 3000
     NUM_LABELS = 2
 
-    COLORBAR_MAX_EPOCHS = 5000
+    COLORBAR_MAX_EPOCHS = 3000
 
     # Directory For Loading saved Data
-    ARCH = '10-7-5-4-3'
+    ARCH = '-'.join(map(str, layers))
     DIR_TEMPLATE = '%%s_%s' % ARCH
 
     noise_variance = 1e-3
@@ -237,10 +237,10 @@ def avg_MI(ids):
 
     return measures
 
-def plot_IP(measures):
-    COLORBAR_MAX_EPOCHS = 5000
+def plot_IP(measures, layers):
+    COLORBAR_MAX_EPOCHS = 3000
     infoplane_measure = 'bin'
-    PLOT_LAYERS = [0, 1, 2, 3, 4]
+    PLOT_LAYERS = list(range(layers))
 
     # Plot Information Plane
     max_epoch = max((max(vals.keys()) if len(vals) else 0) for vals in measures.values())
@@ -270,12 +270,14 @@ def plot_IP(measures):
     cbaxes = fig.add_axes([1.0, 0.125, 0.03, 0.8])
     plt.colorbar(sm, label='Epochs', cax=cbaxes)
     plt.tight_layout()
-    plt.show()
+    plt.savefig(str(len(layers))+"layers.png")
 
 if __name__ == "__main__":
-    # for run in range(12, 50):
-    #     save_activation("tanh", False)
-    #     save_activation("relu", False)
-    #     computeMI(run)
-    measures = avg_MI(list(range(36)))
-    plot_IP(measures)
+    for layers in [[12, 10, 8, 6, 4, 2], [12, 10, 8, 6, 4], [12, 10, 8, 6],
+                   [12, 10, 8], [12, 10], [12,]]:
+        for run in range(10):
+            save_activation("tanh", layers)
+            save_activation("relu", layers)
+            computeMI(run, layers)
+        measures = avg_MI(list(range(10)))
+        plot_IP(measures, layers)
